@@ -1,2 +1,2 @@
-module dynamicstruct
+module github.com/saipratyush/go-dynamic
 
