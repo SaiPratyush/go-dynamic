@@ -69,6 +69,10 @@ func MergeStructs(values ...interface{}) Builder {
 }
 
 func (b *builderImpl) AddField(name string, typ reflect.Kind, tag string) Builder {
+	if name == "" {
+		typ_ := reflect.TypeOf(typ)
+		return b.addField(typ_.Name(), typ_.PkgPath(), typ, tag, true)
+	}
 	return b.addField(name, "", typ, tag, false)
 }
 
