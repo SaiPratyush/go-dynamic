@@ -88,7 +88,7 @@ type (
 		SetInterface(value interface{})
 	}
 
-	readImpl struct {
+	writeImpl struct {
 		fields map[string]fieldImpl
 		value  interface{}
 	}
@@ -100,7 +100,7 @@ type (
 	}
 )
 
-func NewReader(value interface{}) Writer {
+func NewWriter(value interface{}) Writer {
 	fields := map[string]fieldImpl{}
 
 	valueOf := reflect.Indirect(reflect.ValueOf(value))
@@ -116,25 +116,25 @@ func NewReader(value interface{}) Writer {
 		}
 	}
 
-	return readImpl{
+	return writeImpl{
 		fields: fields,
 		value:  value,
 	}
 }
 
-func (r readImpl) HasField(name string) bool {
+func (r writeImpl) HasField(name string) bool {
 	_, ok := r.fields[name]
 	return ok
 }
 
-func (r readImpl) Field(name string) Field {
+func (r writeImpl) Field(name string) Field {
 	if !r.HasField(name) {
 		return nil
 	}
 	return r.fields[name]
 }
 
-func (r readImpl) Fields() []Field {
+func (r writeImpl) Fields() []Field {
 	var fields []Field
 
 	for _, field := range r.fields {
@@ -144,7 +144,7 @@ func (r readImpl) Fields() []Field {
 	return fields
 }
 
-func (r readImpl) ToStruct(value interface{}) error {
+func (r writeImpl) ToStruct(value interface{}) error {
 	valueOf := reflect.ValueOf(value)
 
 	if valueOf.Kind() != reflect.Ptr || valueOf.IsNil() {
@@ -175,7 +175,7 @@ func (r readImpl) ToStruct(value interface{}) error {
 	return nil
 }
 
-func (r readImpl) ToSliceOfReaders() []Writer {
+func (r writeImpl) ToSliceOfReaders() []Writer {
 	valueOf := reflect.Indirect(reflect.ValueOf(r.value))
 	typeOf := valueOf.Type()
 
@@ -186,13 +186,13 @@ func (r readImpl) ToSliceOfReaders() []Writer {
 	var readers []Writer
 
 	for i := 0; i < valueOf.Len(); i++ {
-		readers = append(readers, NewReader(valueOf.Index(i).Interface()))
+		readers = append(readers, NewWriter(valueOf.Index(i).Interface()))
 	}
 
 	return readers
 }
 
-func (r readImpl) ToMapReaderOfReaders() map[interface{}]Writer {
+func (r writeImpl) ToMapReaderOfReaders() map[interface{}]Writer {
 	valueOf := reflect.Indirect(reflect.ValueOf(r.value))
 	typeOf := valueOf.Type()
 
@@ -203,17 +203,17 @@ func (r readImpl) ToMapReaderOfReaders() map[interface{}]Writer {
 	readers := map[interface{}]Writer{}
 
 	for _, keyValue := range valueOf.MapKeys() {
-		readers[keyValue.Interface()] = NewReader(valueOf.MapIndex(keyValue).Interface())
+		readers[keyValue.Interface()] = NewWriter(valueOf.MapIndex(keyValue).Interface())
 	}
 
 	return readers
 }
 
-func (r readImpl) Value() interface{} {
+func (r writeImpl) Value() interface{} {
 	return r.value
 }
 
-func (r readImpl) haveSameTypes(first reflect.Type, second reflect.Type) bool {
+func (r writeImpl) haveSameTypes(first reflect.Type, second reflect.Type) bool {
 	if first.Kind() != second.Kind() {
 		return false
 	}
