@@ -14,7 +14,7 @@ type (
 	}
 
 	FieldConfig interface {
-		SetType(typ reflect.Kind) FieldConfig
+		SetType(typ interface{}) FieldConfig
 		SetTag(tag string) FieldConfig
 	}
 
@@ -133,7 +133,7 @@ func (b *builderImpl) Build() DynamicStruct {
 	}
 }
 
-func (f *fieldConfigImpl) SetType(typ reflect.Kind) FieldConfig {
+func (f *fieldConfigImpl) SetType(typ interface{}) FieldConfig {
 	f.typ = typ
 	return f
 }
