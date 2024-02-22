@@ -6,7 +6,7 @@ import (
 
 type (
 	Builder interface {
-		AddField(name string, typ reflect.Kind, tag string) Builder
+		AddField(name string, typ interface{}, tag string) Builder
 		RemoveField(name string) Builder
 		HasField(name string) bool
 		Field(name string) FieldConfig
@@ -31,7 +31,7 @@ type (
 	fieldConfigImpl struct {
 		name      string
 		pkg       string
-		typ       reflect.Kind
+		typ       interface{}
 		tag       string
 		anonymous bool
 	}
@@ -61,14 +61,14 @@ func MergeStructs(values ...interface{}) Builder {
 		for i := 0; i < valueOf.NumField(); i++ {
 			fval := valueOf.Field(i)
 			ftyp := typeOf.Field(i)
-			builder.(*builderImpl).addField(ftyp.Name, ftyp.PkgPath, fval.Kind(), string(ftyp.Tag), ftyp.Anonymous)
+			builder.(*builderImpl).addField(ftyp.Name, ftyp.PkgPath, fval, string(ftyp.Tag), ftyp.Anonymous)
 		}
 	}
 
 	return builder
 }
 
-func (b *builderImpl) AddField(name string, typ reflect.Kind, tag string) Builder {
+func (b *builderImpl) AddField(name string, typ interface{}, tag string) Builder {
 	if name == "" {
 		typ_ := reflect.TypeOf(typ)
 		return b.addField(typ_.Name(), typ_.PkgPath(), typ, tag, true)
@@ -76,7 +76,7 @@ func (b *builderImpl) AddField(name string, typ reflect.Kind, tag string) Builde
 	return b.addField(name, "", typ, tag, false)
 }
 
-func (b *builderImpl) addField(name string, pkg string, typ reflect.Kind, tag string, anonymous bool) Builder {
+func (b *builderImpl) addField(name string, pkg string, typ interface{}, tag string, anonymous bool) Builder {
 	b.fields = append(b.fields, &fieldConfigImpl{
 		name:      name,
 		typ:       typ,
